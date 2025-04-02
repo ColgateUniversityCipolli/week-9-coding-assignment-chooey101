@@ -20,7 +20,7 @@ llgamma <- function(data, par, neg=F){
   alpha <- par[1]
   beta <- par[2]
   
-  loglik <- sum(log(dgamma(x=data, shape=alpha, rate=beta)))
+  loglik <- sum(log(dgamma(x=data, shape=alpha, rate=beta)), na.rm=T)
   
   return(ifelse(neg, -loglik, loglik))
 }
@@ -29,6 +29,7 @@ llgamma <- function(data, par, neg=F){
                fn = llgamma,
                data=dat.precip.long$Precipitation,
                neg=T))
+gamma.ll <- -mles$value[1]
 alpha.hat.mle <- mles$par[1]
 beta.hat.mle <- mles$par[2]
 
@@ -38,8 +39,22 @@ lllnorm <- function(par, data, neg = F) {
   x <- data
   mu <- par[1]
   sigma <- par[2]
-loglik <- sum(log(dlnorm(x = x, meanlog = mu, sdlog = sigma)))
+loglik <- sum(log(dlnorm(x = x, meanlog = mu, sdlog = sigma)), na.rm=T)
 ifelse(neg,-loglik, loglik)
 }
 
 (mle.lnorm <- optim(fn = lllnorm, par = c(1,1), data = dat.precip.long$Precipitation, neg = T))
+norm.ll <- -mle.lnorm$value[1]
+
+#C:  Compute the likelihood ratio to compare the Weibull and the Gamma distribution
+weibull.ll <- -2166.496
+wg.ratio <- exp(weibull.ll-gamma.ll) 
+#Because the liklihood ratio is extremely close to zero, we can say that the gamma distribution offers stronger support in representing the data than the weibull distribution does.
+
+#D: Compute the liklihood ratio to compare the weibull and lognormal distribution
+wl.ratio <- exp(weibull.ll-norm.ll) 
+#In this case, the ratio is signifigantly above one, indicating that the weibull distribution offers much stronger support for the data than the normal distribution does.
+
+#E:Compute the likelihood ratio to compare the Gamma and the Log-Normal distribution
+gl.ratio <- exp(gamma.ll-norm.ll)
+#This ratio is once again far above one, indicating that the Gamma distribution offers stronger support for the data then the log normal distribution does.
